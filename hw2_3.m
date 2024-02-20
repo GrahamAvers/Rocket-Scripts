@@ -1,0 +1,53 @@
+
+
+% Given a range of values for distance x
+x_values = 1:0.1:2.5;
+
+% Compute the corresponding values of a
+a_values = arrayfun(@(x) a_function(x), x_values);
+
+% Initialize array to store Mach numbers
+M_values = zeros(size(x_values));
+
+% Different initial guesses for M
+initial_guesses_below_1 = [0.5, 0.8, 0.9];
+initial_guesses_above_1 = [1.1, 1.5, 2.0, 2.5, 3.0];
+
+% For each value of a, solve the equation for the Mach number M using the appropriate initial guesses
+for i = 1:length(a_values)
+    a = a_values(i);
+    M_solution_found = false;
+    
+    % Choose the set of initial guesses based on the value of a
+    if a < 1
+        current_initial_guesses = initial_guesses_below_1;
+    else
+        current_initial_guesses = initial_guesses_above_1;
+    end
+    
+    for j = 1:length(current_initial_guesses)
+        % Define the equation in terms of M and solve it
+        eqn = @(M) a^2 - (0.334898*(0.2*M^2 + 1)^6)/M^2;
+        M_temp = fsolve(eqn, current_initial_guesses(j));
+        
+        % Check if the solution adheres to the constraints
+        if (a < 1 && M_temp < 1) || (a > 1 && M_temp > 1)
+            M_values(i) = M_temp;
+            M_solution_found = true;
+            break;
+        end
+    end
+    if ~M_solution_found
+        M_values(i) = NaN;  % Assign NaN if no valid solution is found
+    end
+end
+
+% Display results
+disp('Distance (x)   Mach Number (M)');
+disp([x_values', M_values]);
+
+
+% Define the function for a in terms of distance x
+function a_val = a_function(x)
+    a_val = 1 + 2.2 * (x - 1.5)^2;
+end
